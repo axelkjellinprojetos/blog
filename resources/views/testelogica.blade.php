@@ -10,12 +10,15 @@
 <body>
     <div>
             <?php
+            $num1 = 5;
+            $num2 = 3;
+
             for ($i=1; $i <= 100; $i++) { 
-                if(($i%3==0)&&($i%5==0)){
+                if(($i%$num1==0)&&($i%$num2==0)){
                     echo 'CoBlue'."<br>";
-                }else if($i%5==0){
+                }else if($i%$num2==0){
                     echo 'Blue'."<br>";
-                }else if($i%3==0){
+                }else if($i%$num1==0){
                     echo 'Co'."<br>";
                 }else {
                     echo $i."<br>";

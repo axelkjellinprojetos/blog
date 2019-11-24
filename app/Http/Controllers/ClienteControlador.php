@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Contatos;
+use App\Contatos; 
 
 class ClienteControlador extends Controller 
 {
@@ -17,12 +16,16 @@ class ClienteControlador extends Controller
      */
     public function index()
     {
-        $contatos = Contatos::all();
+        /* A RN04 (Deve ser ordenado a listagem de contatos de forma decrescente por data.) também não está sendo aplicada.
+        Deve ser ordenado a listagem de contatos de forma descrescente por data de contato.*/
+        $contatos = Contatos::orderBy('dataContato', 'desc')->get();
         return view('listarcontatos', compact('contatos'));
+
+        
     }
 
     /**
-     * Show the form for creating new resource.
+     * Show the form for creating new resource.\zxz\x
      *
      * @return \Illuminate\Http\Response
      */
@@ -30,6 +33,7 @@ class ClienteControlador extends Controller
     {
         return view('/cadastrarcontato');
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -39,27 +43,51 @@ class ClienteControlador extends Controller
      */
     public function store(Request $request)
     {       
+        /*Dá uma revisada nas regras de negócio em especial a RN01 (Deve ser obrigatório informar os campos nome do vendedor, nome do contato, telefone e e-mail), 
+        se somente estes campos são obrigatórios deveria ser possível cadastrar um contato informando APENAS esses campos.*/
         $cont = new Contatos;
-        $request->validate([
-            'nomeVendedor'=>'required|min:3|unique:contatos|string',
+        
+       $request->validate([
+            'nomeVendedor'=>'required|min:3',
             'nomeDoContato'=>'required|min:3',
-            'numero'=>'required|min:11|max:11|unique:contatos',
-            'email'=>'required|email|unique:contatos',
-            'dataContato'=>'date|before:tomorrow',
-            'dataValidade'=>'date|after:tomorrow'              
-        ]);       
+            'numero'=>'required|min:11|max:11',
+            'email'=>'required|email'            
+        ]);   
+           
 
         $cont = Contatos::create([
             'nomeVendedor' => $request['nomeVendedor'],
-            'nomeDaEmpresa' =>$request['nomeDaEmpresa'],
-            'nomeDoContato' =>$request['nomeDoContato'],
-            'numero' =>$request['numero'],
-            'email' =>$request['email'],
-            'dataContato'=>$request['dataContato'],
-            'dataValidade' =>$request['dataValidade']                       
+            'nomeDaEmpresa' => $request['nomeDaEmpresa'],
+            'nomeDoContato' => $request['nomeDoContato'],
+            'numero' => $request['numero'],
+            'email' => $request['email'],
+            'dataContato' => $request['dataContato'],
+            'dataValidade' => $request['dataValidade']
+                                   
         ]);
+        /*
+            Aqui criei duas variaveis recebendo as datas de contato e de validade
+            criei um laço de decisao onde se data de contato for maior que data de validade 
+            ele ordena a lista do DB em ordem decrescente por data de crição e pega o primeiro que no caso 
+            foi o ultimo a ser criado e o deleta e retorna para pagina de cadastro, infelizmente nao consegui redirecionar para um aviso 
+            do erro, mas enquanto o usuario nao por a data certa ele nao ira cadastrar.
+        */
+        $dContato = $cont['dataContato'];
+        $dValidade = $cont['dataValidade'];
+        if($dContato > $dValidade){
+            echo 'A data de contato não pode ser maior que a data de Validade';
+            $cont = Contatos::orderBy('created_at', 'desc')->first();
+                if(isset($cont)){
+                   $cont->delete();
+            }
+            return redirect('\cadastrarcontato');
             
+        }
+        
+     
         return redirect('listarcontatos');
+
+        
      }
 
     /**
@@ -102,14 +130,8 @@ class ClienteControlador extends Controller
             'nomeVendedor'=>'required|min:3',
             'nomeDoContato'=>'required|min:3',
             'numero'=>'required|min:11|max:11',
-            'email'=>'required|email',
-            'dataContato'=>'date|before:tomorrow',
-            'dataValidade'=>'date|after:tomorrow'              
+            'email'=>'required|email'            
         ]); 
-
-      /* $cont = Contatos::findOrFail($id);
-        $cont->fill($request->all());     
-        $cont->save();*/
         
 
         $cont = Contatos::find($id);
@@ -124,7 +146,7 @@ class ClienteControlador extends Controller
                 $cont->save();
             }
             return redirect('\listarcontatos');
-        
+            
     }
 
     /**
@@ -140,17 +162,7 @@ class ClienteControlador extends Controller
             $cont->delete();
         }
             return redirect('\listarcontatos');
+        
+        
     }
 }
-
-
- /*$cont = new Contatos;      
-         $cont->nomeVendedor = $request->input('nomeVendedor');  
-         $cont->nomeDaEmpresa = $request->input('nomeDaEmpresa');
-         $cont->nomeDoContato = $request->input('nomeDoContato');
-         $cont->numero = $request->input('numero');
-         $cont->email = $request->input('email');
-         $cont->dataContato = $request->input('dataContato');
-         $cont->dataValidade = $request->input('dataValidade');
-         $cont->save();
-         return redirect('listarcontatos');*/
